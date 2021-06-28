@@ -18,7 +18,7 @@ This script does the following:
 3. Handles data generation
 
 **Author**: Soumya Shreeram <br>
-**Script adapted from**: Millon Martin & Kevin Müller <br>
+**Script adapted from**: Millon Martin & Kevin MÃƒÆ’Ã‚Â¼ller <br>
 **Date**: 16th March 2020
 
 ## 1. Imports
@@ -50,6 +50,10 @@ from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.utils import plot_model
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Layer
+
+import tensorflow_probability as tfp
+tfd = tfp.distributions
+tfpl = tfp.layers
 
 """### 2. Defines a modified pooling layer that outputs a 3D tensor
 
@@ -297,8 +301,12 @@ def buildResNet18(num_pix, num_filter, kern_size, n_block, \
 
   outputs = Dense(len(r_0))(outputs)
   outputs = Activation('softmax')(outputs)
+  
+ # outputs = tfpl.DistributionLambda(lambda t: tfd.Independent(tfd.MixtureSameFamily(mixture_distribution=tfd.Categorical(logits=tf.expand_dims(t[...,:len(r_0)],-2)),components_distribution=tfd.Normal(tf.nn.softplus(tf.expand_dims(t[...,len(r_0):2*len(r_0)],-2)),tf.nn.softplus(tf.expand_dims(t[...,2*len(r_0):],-2)))),1))(outputs)
 
   return inputs, outputs
+  
+
 
 
 def compileResNet(sample_params, r_0, save_image_dir, learning_rate, momentum):
@@ -448,6 +456,8 @@ def trainModel(model, trainX, trainy, batch_size = 50, epochs = 50, validation_s
 		trainX = reshapeTrainX(trainX)
 
 	model_history = model.fit(trainX, trainy, batch_size=batch_size, epochs=epochs, verbose=verbose, validation_split=validation_split, shuffle=True)
+	
+	
 	return model, model_history
 
 def evaluatePredictModel(model, testX, testy, verbose = 1):
